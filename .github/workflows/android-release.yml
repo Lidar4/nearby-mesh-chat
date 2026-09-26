@@ -12,7 +12,6 @@ jobs:
   build:
     name: Build and Validate Release APK + AAB
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,11 +29,6 @@ jobs:
       - name: Make Gradle Wrapper Executable
         run: chmod +x ./gradlew
 
-      - name: Show tool versions
-        run: |
-          java -version
-          ./gradlew --version
-
       - name: Prepare CI signing keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -44,30 +38,22 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           set -euo pipefail
+          mkdir -p app
           if [ -n "${KEYSTORE_BASE64:-}" ]; then
-            echo "$KEYSTORE_BASE64" | base64 --decode > my-upload-key.jks
-            test -s my-upload-key.jks
+            echo "$KEYSTORE_BASE64" | base64 --decode > app/my-upload-key.jks
+            test -s app/my-upload-key.jks
             echo "Using repository release keystore."
           else
             echo "No release keystore secret configured; generating an ephemeral CI-only signing key."
-            keytool -genkeypair -v \
-              -keystore my-upload-key.jks \
-              -alias "${KEY_ALIAS:-upload}" \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -storepass "${KEYSTORE_PASSWORD:-${STORE_PASSWORD:-temppass}}" \
-              -keypass "${KEY_PASSWORD:-temppass}" \
-              -dname "CN=Nearby Chat CI, OU=Build, O=Nearby Chat, C=US"
+            keytool -genkeypair -v               -keystore app/my-upload-key.jks               -alias "${KEY_ALIAS:-upload}"               -keyalg RSA               -keysize 2048               -validity 10000               -storepass "${KEYSTORE_PASSWORD:-${STORE_PASSWORD:-temppass}}"               -keypass "${KEY_PASSWORD:-temppass}"               -dname "CN=Nearby Chat CI, OU=Build, O=Nearby Chat, C=US"
           fi
 
       - name: Build Release APK and AAB
         env:
-          KEYSTORE_PATH: my-upload-key.jks
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEYSTORE_PATH: app/my-upload-key.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || secrets.STORE_PASSWORD || 'temppass' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'upload' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'temppass' }}
         run: ./gradlew :app:assembleRelease :app:bundleRelease --no-daemon --stacktrace
 
       - name: Validate APK and AAB
