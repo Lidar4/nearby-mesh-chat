@@ -94,6 +94,7 @@ class P2PManager(private val context: Context) {
     var onCallAcceptedWithPort: ((Int) -> Unit)? = null
     var onCallRejected: (() -> Unit)? = null
     var onCallEnded: (() -> Unit)? = null
+    var onPeerConnected: ((peerId: String, peerName: String) -> Unit)? = null
 
     // End-to-End Conversation symmetric passphrases: peerId -> passphrase
     private val conversationPasswords = ConcurrentHashMap<String, String>()
@@ -260,6 +261,7 @@ class P2PManager(private val context: Context) {
                     _connectedPeerName.value = peerName
                     _connectedPeerIp.value = connection.ipAddress
                     _connectionState.value = ConnectionState.CONNECTED
+                    onPeerConnected?.invoke(peerId, peerName)
 
                     // Learn route
                     meshRouter.learnRoute(peerId, peerId, MAX_HOPS, MAX_HOPS)
@@ -331,6 +333,7 @@ class P2PManager(private val context: Context) {
                         _connectedPeerName.value = peerName
                         _connectedPeerIp.value = device.ipAddress
                         _connectionState.value = ConnectionState.CONNECTED
+                        onPeerConnected?.invoke(peerId, peerName)
 
                         // Learn route
                         meshRouter.learnRoute(peerId, peerId, MAX_HOPS, MAX_HOPS)
@@ -365,6 +368,8 @@ class P2PManager(private val context: Context) {
                             handleMeshRoutePacket(json, connection.peerId)
                         } else if (type == "mesh_route_ack") {
                             handleMeshRouteAckPacket(json, connection.peerId)
+                        } else if (type == "typing") {
+                            _isPeerTyping.value = json.optBoolean("isTyping", false)
                         }
                     } catch (jsonEx: Exception) {
                         Log.e(TAG, "Safely caught malformed packet: ${jsonEx.message}")
@@ -406,11 +411,13 @@ class P2PManager(private val context: Context) {
             when (messageType) {
                 "text" -> {
                     // Decrypt hybrid digital envelope or symmetric passphrase fallback
-                    val decryptedText = if (encryptedPayload.startsWith("sym:")) {
-                        val passphrase = conversationPasswords[senderId] ?: ""
-                        EncryptionHelper.decryptSymmetric(encryptedPayload, passphrase)
-                    } else {
-                        EncryptionHelper.decryptWithPrivateKey(encryptedPayload)
+                    val decryptedText = when {
+                        encryptedPayload.startsWith("plain:") -> encryptedPayload.removePrefix("plain:")
+                        encryptedPayload.startsWith("sym:") -> {
+                            val passphrase = conversationPasswords[senderId] ?: ""
+                            EncryptionHelper.decryptSymmetric(encryptedPayload, passphrase)
+                        }
+                        else -> EncryptionHelper.decryptWithPrivateKey(encryptedPayload)
                     }
 
                     Log.d(TAG, "Mesh text packet arrived! Sender: $senderName, Decrypted: $decryptedText")
@@ -506,11 +513,9 @@ class P2PManager(private val context: Context) {
                     // 2. If asymmetric Public Key is available, use digital envelope (RSA-OAEP + AES-GCM)
                     EncryptionHelper.encryptWithPublicKey(text, recipientPubKey)
                 } else {
-                    // 3. If Public Key is unknown, send an automated key request over the mesh!
-                    Log.d(TAG, "Recipient public key is unknown. Sending mesh key request query first...")
+                    Log.d(TAG, "Recipient public key is unknown; requesting key and sending first message reliably.")
                     sendMeshKeyRequest(receiverId, receiverName)
-                    // Save text temporarily in plaintext fallback indicator, store-and-forward retry will encrypt once key is fetched
-                    "[PlaintextFallback]:$text"
+                    "plain:$text"
                 }
 
                 val routeEnvelope = JSONObject().apply {
