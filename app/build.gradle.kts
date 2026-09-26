@@ -14,17 +14,21 @@ android {
     targetSdk = 36
     versionCode = 1
     versionName = "1.0.0"
-
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
     create("release") {
       val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      val keystoreFile = file(keystorePath)
+      if (keystoreFile.exists()) {
+        storeFile = keystoreFile
+        storePassword = System.getenv("KEYSTORE_PASSWORD")
+          ?: System.getenv("STORE_PASSWORD")
+          ?: "temppass"
+        keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
+        keyPassword = System.getenv("KEY_PASSWORD") ?: "temppass"
+      }
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
@@ -39,24 +43,26 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      
-      val keystore = signingConfigs.getByName("release").storeFile
-      if (keystore != null && keystore.exists()) {
-          signingConfig = signingConfigs.getByName("release")
+      val releaseKeystore = signingConfigs.getByName("release").storeFile
+      signingConfig = if (releaseKeystore != null && releaseKeystore.exists()) {
+        signingConfigs.getByName("release")
       } else {
-          signingConfig = signingConfigs.getByName("debugConfig")
+        signingConfigs.getByName("debugConfig")
       }
     }
     debug { signingConfig = signingConfigs.getByName("debugConfig") }
   }
+
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
   }
+
   buildFeatures {
     compose = true
     buildConfig = true
   }
+
   testOptions { unitTests { isIncludeAndroidResources = true } }
   dependenciesInfo {
     includeInApk = false
@@ -79,7 +85,6 @@ dependencies {
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
-
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
 
@@ -99,5 +104,5 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
 
-  "ksp"(libs.androidx.room.compiler)
+  ksp(libs.androidx.room.compiler)
 }
