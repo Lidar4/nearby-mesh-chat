@@ -50,7 +50,7 @@ jobs:
 
       - name: Build Release APK and AAB
         env:
-          KEYSTORE_PATH: app/my-upload-key.jks
+          KEYSTORE_PATH: my-upload-key.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || secrets.STORE_PASSWORD || 'temppass' }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'upload' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'temppass' }}
