@@ -41,7 +41,10 @@ class ChatRepository(private val database: AppDatabase) {
             lastMessageText = lastText,
             lastMessageTime = message.timestamp,
             unreadCount = existing?.unreadCount ?: 0,
-            isConnected = existing?.isConnected ?: false
+            isConnected = existing?.isConnected ?: false,
+            isGroup = existing?.isGroup ?: false,
+            groupOwnerId = existing?.groupOwnerId,
+            groupMembers = existing?.groupMembers
         )
         conversationDao.insertOrUpdateConversation(conversation)
     }
@@ -61,7 +64,10 @@ class ChatRepository(private val database: AppDatabase) {
             lastMessageText = lastText,
             lastMessageTime = message.timestamp,
             unreadCount = newUnread,
-            isConnected = true // Since we received a message, it is active
+            isConnected = true, // Since we received a message, it is active
+            isGroup = existing?.isGroup ?: false,
+            groupOwnerId = existing?.groupOwnerId,
+            groupMembers = existing?.groupMembers
         )
         conversationDao.insertOrUpdateConversation(conversation)
     }
