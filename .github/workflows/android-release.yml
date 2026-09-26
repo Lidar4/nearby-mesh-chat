@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
-    name: Build and Validate Release APK + AAB
+    name: Build, Validate and Publish Release APK + AAB
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,7 +45,15 @@ jobs:
             echo "Using repository release keystore."
           else
             echo "No release keystore secret configured; generating an ephemeral CI-only signing key."
-            keytool -genkeypair -v               -keystore app/my-upload-key.jks               -alias "${KEY_ALIAS:-upload}"               -keyalg RSA               -keysize 2048               -validity 10000               -storepass "${KEYSTORE_PASSWORD:-${STORE_PASSWORD:-temppass}}"               -keypass "${KEY_PASSWORD:-temppass}"               -dname "CN=Nearby Chat CI, OU=Build, O=Nearby Chat, C=US"
+            keytool -genkeypair -v \
+              -keystore app/my-upload-key.jks \
+              -alias "${KEY_ALIAS:-upload}" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass "${KEYSTORE_PASSWORD:-${STORE_PASSWORD:-temppass}}" \
+              -keypass "${KEY_PASSWORD:-temppass}" \
+              -dname "CN=Nearby Chat CI, OU=Build, O=Nearby Chat, C=US"
           fi
 
       - name: Build Release APK and AAB
@@ -88,3 +96,22 @@ jobs:
           path: artifacts/*
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish APK as GitHub Release Asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="build-${{ github.run_number }}"
+          title="Nearby Chat APK Build ${{ github.run_number }}"
+
+          gh release create "$tag" \
+            artifacts/NearbyChat-release.apk \
+            artifacts/NearbyChat-release.aab \
+            artifacts/checksums.txt \
+            artifacts/build-info.json \
+            --repo "${{ github.repository }}" \
+            --title "$title" \
+            --notes "Automated Nearby Chat release from commit ${{ github.sha }}."
+
+          echo "Release published: https://github.com/${{ github.repository }}/releases/tag/$tag"
