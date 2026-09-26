@@ -21,20 +21,12 @@ android {
     create("release") {
       val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
       val keystoreFile = file(keystorePath)
-      if (keystoreFile.exists()) {
-        storeFile = keystoreFile
-        storePassword = System.getenv("KEYSTORE_PASSWORD")
-          ?: System.getenv("STORE_PASSWORD")
-          ?: "temppass"
-        keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
-        keyPassword = System.getenv("KEY_PASSWORD") ?: "temppass"
-      }
-    }
-    create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      storeFile = keystoreFile
+      storePassword = System.getenv("KEYSTORE_PASSWORD")
+        ?: System.getenv("STORE_PASSWORD")
+        ?: "temppass"
+      keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
+      keyPassword = System.getenv("KEY_PASSWORD") ?: "temppass"
     }
   }
 
@@ -43,14 +35,8 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      val releaseKeystore = signingConfigs.getByName("release").storeFile
-      signingConfig = if (releaseKeystore != null && releaseKeystore.exists()) {
-        signingConfigs.getByName("release")
-      } else {
-        signingConfigs.getByName("debugConfig")
-      }
+      signingConfig = signingConfigs.getByName("release")
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
   }
 
   compileOptions {
