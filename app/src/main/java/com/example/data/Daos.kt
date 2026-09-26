@@ -44,6 +44,12 @@ interface MessageDao {
     @Query("SELECT * FROM messages WHERE status = 'sending'")
     suspend fun getPendingMessages(): List<MessageEntity>
 
+    @Query("SELECT * FROM messages WHERE id = :id LIMIT 1")
+    suspend fun getMessageById(id: String): MessageEntity?
+
+    @Query("DELETE FROM messages WHERE id = :id")
+    suspend fun deleteMessage(id: String)
+
     @Query("DELETE FROM messages WHERE conversationId = :conversationId")
     suspend fun deleteMessagesForConversation(conversationId: String)
 }

@@ -66,6 +66,17 @@ class ChatRepository(private val database: AppDatabase) {
         conversationDao.insertOrUpdateConversation(conversation)
     }
 
+    suspend fun getMessage(id: String): MessageEntity? =
+        messageDao.getMessageById(id)
+
+    suspend fun deleteMessage(id: String) {
+        messageDao.deleteMessage(id)
+    }
+
+    suspend fun insertMessage(message: MessageEntity) {
+        messageDao.insertMessage(message)
+    }
+
     suspend fun updateMessageStatus(id: String, status: String) {
         messageDao.updateMessageStatus(id, status)
     }
