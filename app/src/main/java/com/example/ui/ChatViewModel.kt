@@ -127,6 +127,25 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
+        p2pManager.onPeerConnected = { peerId, peerName ->
+            viewModelScope.launch(Dispatchers.IO) {
+                val existing = repository.getConversation(peerId)
+                repository.insertOrUpdateConversation(
+                    ConversationEntity(
+                        peerId = peerId,
+                        peerName = peerName,
+                        lastMessageText = existing?.lastMessageText ?: "Connected",
+                        lastMessageTime = existing?.lastMessageTime ?: System.currentTimeMillis(),
+                        unreadCount = existing?.unreadCount ?: 0,
+                        isConnected = true,
+                        isGroup = existing?.isGroup ?: false,
+                        groupOwnerId = existing?.groupOwnerId,
+                        groupMembers = existing?.groupMembers
+                    )
+                )
+            }
+        }
+
         p2pManager.onCallRequested = { peerName ->
             // Update audio call state
             audioCallManager.setCallState(CallState.RINGING)
