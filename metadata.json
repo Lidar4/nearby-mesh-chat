@@ -1,0 +1,6 @@
+{
+  "name": "Nearby Chat",
+  "description": "A secure, fully offline peer-to-peer chat and audio calling application using local networks and NSD.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

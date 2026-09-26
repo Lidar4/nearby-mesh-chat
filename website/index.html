@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Chat — Fully Serverless Offline Mesh Messenger</title>
+    <style>
+        :root {
+            --primary: #0288d1;
+            --primary-dark: #01579b;
+            --secondary: #26a69a;
+            --background: #f5f5f5;
+            --text-dark: #212121;
+            --text-light: #757575;
+            --white: #ffffff;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: var(--white);
+            padding: 3rem 1.5rem;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background-color: var(--secondary);
+            color: var(--white);
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            background-color: #00897b;
+        }
+
+        .secondary-btn {
+            background-color: transparent;
+            border: 2px solid var(--white);
+        }
+
+        .secondary-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .section {
+            background-color: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        h2 {
+            color: var(--primary-dark);
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--background);
+            padding-bottom: 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (min-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .step-list {
+            list-style-type: decimal;
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-box {
+            background-color: #fff9c4;
+            border-left: 6px solid #fbc02d;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .qr-section {
+            text-align: center;
+            padding: 2rem;
+            background-color: #e0f7fa;
+            border-radius: 8px;
+        }
+
+        .qr-placeholder {
+            width: 150px;
+            height: 150px;
+            background-color: var(--white);
+            border: 2px dashed var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem auto;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Nearby Chat</h1>
+        <p class="tagline">Fully Serverless • 100% Offline Decentralized Mesh Messenger</p>
+        <a href="https://github.com/fardusmf81/nearbychat/releases/latest" class="cta-btn">DOWNLOAD LATEST APK</a>
+        <a href="https://github.com/fardusmf81/nearbychat" class="cta-btn secondary-btn">VIEW GITHUB RELEASE</a>
+    </header>
+
+    <div class="container">
+
+        <div class="warning-box">
+            <strong>Wireless Range Notice:</strong> Actual real-world range depends strictly on physical environment obstacles, RF interference, cellular traffic, and the mobile hardware transceiver capabilities. Standard direct peer links support up to approximately 200 meters. The network dynamically routes packets past this range across intermediate relay nodes!
+        </div>
+
+        <section class="section" id="how-it-works">
+            <h2>Multi-hop Mesh Network</h2>
+            <p>Nearby Chat turns your mobile device into an active network node. Instead of relying on a centralized cloud server, internet provider, or cell tower, devices communicate directly with each other over Wi-Fi and direct TCP sockets. When devices are chained together, they automatically route messages dynamically!</p>
+            <div class="qr-section">
+                <h3>SCAN TO DOWNLOAD NEARBY CHAT</h3>
+                <div class="qr-placeholder">[ QR Code to Website ]</div>
+                <p style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-light);">Share this download page offline with nearby friends to build your mesh directory!</p>
+            </div>
+        </section>
+
+        <section class="section" id="security">
+            <h2>End-to-End Cryptography</h2>
+            <p>Every private message sent over Nearby Chat is cryptographically protected using 256-bit AES-GCM encryption. The message payload is encrypted directly on the sender's device and can only be decrypted by the final recipient.</p>
+            <p><strong>Relay Protection:</strong> Intermediate nodes forwarding or routing your message only have access to the routing envelope headers (Source/Destination IDs, TTL). They cannot read, inject, or tamper with your private content.</p>
+        </section>
+
+        <section class="section" id="installation">
+            <h2>Simple Installation Guide</h2>
+            <ol class="step-list">
+                <li>Tap the <strong>Download Latest APK</strong> button above to download the package directly.</li>
+                <li>Wait for the download to complete, then tap the notification to open the file.</li>
+                <li>If prompted by Android, grant permission to install applications from your browser source.</li>
+                <li>Follow the standard system installer prompt, then launch <strong>Nearby Chat</strong>.</li>
+                <li>On first launch, set up your display name and grant local network permissions to begin discovering nearby nodes!</li>
+            </ol>
+            <p style="font-size: 0.9rem; color: var(--text-light);"><em>Note: Nearby Chat complies with play-protect standards and does not request broad file storage or unrelated SMS permissions.</em></p>
+        </section>
+
+        <section class="section" id="faq">
+            <h2>Frequently Asked Questions (FAQ)</h2>
+            <div class="grid">
+                <div>
+                    <strong>Does it work without cellular service?</strong>
+                    <p>Yes. Nearby Chat is completely serverless and requires absolutely no SIM card, cellular carrier signal, or mobile data subscription. It functions fully offline.</p>
+                </div>
+                <div>
+                    <strong>What is the maximum number of hops?</strong>
+                    <p>The mesh router caps the packet Time-to-Live (TTL) at a maximum of 8 hops to prevent loop overhead and optimize wireless channel bandwidth.</p>
+                </div>
+                <div>
+                    <strong>Is my location tracked?</strong>
+                    <p>No. Nearby Chat uses local network service discovery (mDNS) solely to identify local sockets. No location coordinates or telemetry are ever uploaded.</p>
+                </div>
+                <div>
+                    <strong>How do I secure my chats?</strong>
+                    <p>Tap the lock icon in the chat screen header to configure a shared password secret with your friend. All subsequent multi-hop messages will be securely encrypted using AES-GCM 256-bit.</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Nearby Chat Mesh Network Project. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

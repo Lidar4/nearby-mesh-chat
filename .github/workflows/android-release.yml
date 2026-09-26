@@ -1,0 +1,112 @@
+name: Android Release Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create a GitHub Release?'
+        required: false
+        default: 'false'
+
+jobs:
+  build:
+    name: Build & Validate Release Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x gradlew
+
+      - name: Verify Gradle Wrapper
+        uses: gradle/actions/wrapper-validation-action@v3
+
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Decode Keystore
+        run: |
+          if [ ! -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/my-upload-key.jks
+            echo "Keystore successfully decoded!"
+          else
+            echo "KEYSTORE_BASE64 secret not found. Generating a temporary signing keystore for CI release packaging..."
+            keytool -genkey -v -keystore app/my-upload-key.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass "temppass" -keypass "temppass" -dname "CN=NearbyChat, OU=AIStudio, O=AIStudio, L=MountainView, S=California, C=US"
+          fi
+
+      - name: Build Release APK and AAB
+        env:
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'temppass' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'upload' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'temppass' }}
+          KEYSTORE_PATH: "my-upload-key.jks"
+        run: ./gradlew assembleRelease bundleRelease
+
+      - name: Validate Release Artifacts
+        run: |
+          apk_path=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          aab_path=$(find app/build/outputs/bundle/release -name "*.aab" | head -n 1)
+          
+          if [ -z "$apk_path" ] || [ ! -f "$apk_path" ]; then
+            echo "Error: Release APK not found!"
+            exit 1
+          fi
+          if [ -z "$aab_path" ] || [ ! -f "$aab_path" ]; then
+            echo "Error: Release AAB not found!"
+            exit 1
+          fi
+          
+          echo "Release APK found at: $apk_path"
+          echo "Release AAB found at: $aab_path"
+          
+          # Print checksums
+          sha256sum "$apk_path" > checksums.txt
+          sha256sum "$aab_path" >> checksums.txt
+          cat checksums.txt
+
+          # Generate build-info.json metadata
+          echo '{
+            "appName": "Nearby Chat",
+            "packageName": "com.aistudio.nearbychat.uwyqxt",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "gitCommit": "${{ github.sha }}",
+            "buildTimestamp": '$(date +%s)',
+            "buildType": "release",
+            "sha256": "'$(sha256sum "$apk_path" | awk '{print $1}')'"
+          }' > build-info.json
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NearbyChat-release-apk
+          path: app/build/outputs/apk/release/*.apk
+
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NearbyChat-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+
+      - name: Upload Metadata & Checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: NearbyChat-build-metadata
+          path: |
+            checksums.txt
+            build-info.json
